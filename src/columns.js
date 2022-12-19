@@ -14,6 +14,11 @@ const columns = [
     Val: "name",
     Display: "NAME",
   },
+  {
+    Type: "column",
+    Val: "age",
+    Display: "Age",
+  },
 ];
 
 export default columns;

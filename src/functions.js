@@ -30,3 +30,5 @@ const functions = [
     value: "count",
   },
 ];
+
+export default functions;

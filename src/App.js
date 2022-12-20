@@ -13,14 +13,33 @@ import Mention from "./Components/Mentions";
 import Portal from "./Components/Portal";
 import columns from "./columns";
 import functions from "./functions";
+import { v4 as uuidv4 } from "uuid";
+import { useFormik } from "formik";
 
 function App() {
   const ref = useRef();
   const [target, setTarget] = useState();
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
+  const [usedColumns, setUsedColumns] = useState([]);
+  const [usedGroupByColumns, setUsedGroupByColumns] = useState([]);
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
+
+  useEffect(() => {
+    console.log(
+      "Used Columns: ",
+      usedColumns,
+      "Used Group By columns: ",
+      usedGroupByColumns
+    );
+  }, [usedColumns, usedGroupByColumns]);
+
+  const formik = useFormik({
+    initialValues: {
+      functionColumns: [],
+    },
+  });
 
   const withMentions = (editor) => {
     const { isInline, isVoid, markableVoid } = editor;
@@ -73,7 +92,7 @@ function App() {
           case "Enter":
             event.preventDefault();
             Transforms.select(editor, target);
-            insertMention(editor, functionChars[index]);
+            insertMention(editor, { ...functionChars[index], key: uuidv4() });
             setTarget(null);
             break;
           case "Escape":
@@ -146,7 +165,16 @@ function App() {
     const { attributes, children, element } = props;
     switch (element.type) {
       case "mention":
-        return <Mention {...props} />;
+        return (
+          <Mention
+            {...props}
+            formik={formik}
+            setUsedColumns={setUsedColumns}
+            usedColumns={usedColumns}
+            ssetUsedGroupByColumns={setUsedGroupByColumns}
+            usedGroupByColumns={usedGroupByColumns}
+          />
+        );
       default:
         return <p {...attributes}>{children}</p>;
     }

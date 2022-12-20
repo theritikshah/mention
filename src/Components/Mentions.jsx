@@ -1,7 +1,14 @@
 import { useSelected, useFocused } from "slate-react";
 import columns from "../columns";
 
-const Mention = ({ attributes, children, element }) => {
+const Mention = ({
+  attributes,
+  children,
+  element,
+  formik,
+  setUsedColumns,
+  ssetUsedGroupByColumns,
+}) => {
   const selected = useSelected();
   const focused = useFocused();
   const style = {
@@ -13,6 +20,42 @@ const Mention = ({ attributes, children, element }) => {
     backgroundColor: "#eee",
     fontSize: "0.9em",
     boxShadow: selected && focused ? "0 0 0 2px #B4D5FF" : "none",
+  };
+
+  const handleSelectChange = (e) => {
+    setUsedColumns((prev) => {
+      if (prev.some((obj) => obj.key === element.character.key)) {
+        return prev.map((obj) => {
+          return { ...obj, name: e.target.value };
+        });
+      }
+
+      return [
+        ...prev,
+        {
+          name: e.target.value,
+          key: element.character.key,
+        },
+      ];
+    });
+  };
+
+  const handleSelectGroupByChange = (e) => {
+    ssetUsedGroupByColumns((prev) => {
+      if (prev.some((obj) => obj.key === element.character.key)) {
+        return prev.map((obj) => {
+          return { ...obj, name: e.target.value };
+        });
+      }
+
+      return [
+        ...prev,
+        {
+          name: e.target.value,
+          key: element.character.key,
+        },
+      ];
+    });
   };
 
   const selectStyle = {
@@ -49,14 +92,14 @@ const Mention = ({ attributes, children, element }) => {
         style={style}
       >
         {children}@{`${element.character.name} (Column: `}
-        <select style={selectStyle}>
+        <select onChange={handleSelectChange} style={selectStyle}>
           <option>select Column</option>
           {columns.map((column) => (
             <option>{column.Display}</option>
           ))}
         </select>{" "}
         &nbsp;, GroupBy:&nbsp;
-        <select style={selectStyle}>
+        <select onChange={handleSelectGroupByChange} style={selectStyle}>
           <option>select GroupBy Column</option>
           {columns.map((column) => (
             <option>{column.Display}</option>

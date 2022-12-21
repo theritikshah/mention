@@ -16,8 +16,6 @@ import functions from "./functions";
 import { v4 as uuidv4 } from "uuid";
 import { useFormik } from "formik";
 
-// /abcd
-
 function App() {
   const ref = useRef();
   const [target, setTarget] = useState();
@@ -36,6 +34,30 @@ function App() {
       usedGroupByColumns
     );
   }, [usedColumns, usedGroupByColumns]);
+
+  function functionToString(value, key) {
+    let column, groupColumn;
+
+    for (let obj of usedGroupByColumns) {
+      if (obj.key === key) {
+        groupColumn = obj.name;
+      }
+    }
+
+    for (let obj of usedColumns) {
+      if (obj.key == key) {
+        column = obj.name;
+      }
+    }
+
+    if (column && groupColumn) {
+      return `${column}.groupby(${groupColumn}).transform("${value}")`;
+    }
+
+    if (column) {
+      return `${column}.${value}()`;
+    }
+  }
 
   const formik = useFormik({
     initialValues: {
@@ -172,6 +194,8 @@ function App() {
             formik={formik}
             setUsedColumns={setUsedColumns}
             setUsedGroupByColumns={setUsedGroupByColumns}
+            editor={editor}
+            Transforms={Transforms}
           />
         );
       default:
@@ -237,6 +261,34 @@ function App() {
 
           setTarget(null);
           console.log(value);
+          let arr = [];
+          value.forEach((obj) => {
+            arr.push(obj.children);
+          });
+
+          let stringArray = [];
+
+          const children = arr.flat(1).filter((obj) => obj.text !== "");
+
+          for (let obj of children) {
+            if ("text" in obj) {
+              stringArray.push(obj.text);
+            } else if (
+              obj.type == "mention" &&
+              obj.character.type == "function"
+            ) {
+              stringArray.push(
+                functionToString(obj.character.value, obj.character.key)
+              );
+            } else if (
+              obj.type == "mention" &&
+              obj.character.Type == "column"
+            ) {
+              stringArray.push(obj.character.Val);
+            }
+          }
+
+          console.log(stringArray.join(" ").replace(/ /g, ""));
         }}
       >
         <Editable

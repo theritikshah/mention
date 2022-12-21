@@ -9,6 +9,8 @@ const Mention = ({
   formik,
   setUsedColumns,
   setUsedGroupByColumns,
+  editor,
+  Transforms,
 }) => {
   const selected = useSelected();
   const focused = useFocused();
@@ -39,6 +41,8 @@ const Mention = ({
         },
       ];
     });
+
+    Transforms.select(editor, { offset: 0, path: [0, 0] });
   };
 
   const handleSelectGroupByChange = (e) => {
@@ -57,6 +61,8 @@ const Mention = ({
         },
       ];
     });
+
+    Transforms.select(editor, { offset: 0, path: [0, 0] });
   };
 
   const selectStyle = {
@@ -98,7 +104,9 @@ const Mention = ({
             select Column
           </option>
           {columns.map((column) => (
-            <option key={column.Val}>{column.Display}</option>
+            <option key={column.Val} value={column.Val}>
+              {column.Display}
+            </option>
           ))}
         </select>{" "}
         &nbsp;, GroupBy:&nbsp;
@@ -107,7 +115,10 @@ const Mention = ({
             select GroupBy Column
           </option>
           {columns.map((column) => (
-            <option key={column.Val}> {column.Display}</option>
+            <option key={column.Val} value={column.Val}>
+              {" "}
+              {column.Display}
+            </option>
           ))}
         </select>
         &nbsp;)

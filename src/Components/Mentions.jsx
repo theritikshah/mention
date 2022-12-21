@@ -1,5 +1,6 @@
 import { useSelected, useFocused } from "slate-react";
 import columns from "../columns";
+import { v4 as uuidv4 } from "uuid";
 
 const Mention = ({
   attributes,
@@ -7,7 +8,7 @@ const Mention = ({
   element,
   formik,
   setUsedColumns,
-  ssetUsedGroupByColumns,
+  setUsedGroupByColumns,
 }) => {
   const selected = useSelected();
   const focused = useFocused();
@@ -25,9 +26,9 @@ const Mention = ({
   const handleSelectChange = (e) => {
     setUsedColumns((prev) => {
       if (prev.some((obj) => obj.key === element.character.key)) {
-        return prev.map((obj) => {
-          return { ...obj, name: e.target.value };
-        });
+        return prev
+          .filter((obj) => obj.key !== element.character.key)
+          .concat([{ name: e.target.value, key: element.character.key }]);
       }
 
       return [
@@ -41,11 +42,11 @@ const Mention = ({
   };
 
   const handleSelectGroupByChange = (e) => {
-    ssetUsedGroupByColumns((prev) => {
+    setUsedGroupByColumns((prev) => {
       if (prev.some((obj) => obj.key === element.character.key)) {
-        return prev.map((obj) => {
-          return { ...obj, name: e.target.value };
-        });
+        return prev
+          .filter((obj) => obj.key !== element.character.key)
+          .concat([{ name: e.target.value, key: element.character.key }]);
       }
 
       return [
@@ -93,16 +94,20 @@ const Mention = ({
       >
         {children}@{`${element.character.name} (Column: `}
         <select onChange={handleSelectChange} style={selectStyle}>
-          <option>select Column</option>
+          <option key="column" value="">
+            select Column
+          </option>
           {columns.map((column) => (
-            <option>{column.Display}</option>
+            <option key={column.Val}>{column.Display}</option>
           ))}
         </select>{" "}
         &nbsp;, GroupBy:&nbsp;
         <select onChange={handleSelectGroupByChange} style={selectStyle}>
-          <option>select GroupBy Column</option>
+          <option key="groupby" value="">
+            select GroupBy Column
+          </option>
           {columns.map((column) => (
-            <option>{column.Display}</option>
+            <option key={column.Val}> {column.Display}</option>
           ))}
         </select>
         &nbsp;)

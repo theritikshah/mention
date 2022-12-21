@@ -137,7 +137,6 @@ function App() {
       el.style.top = `${rect.top + window.pageYOffset + 24}px`;
       el.style.left = `${rect.left + window.pageXOffset}px`;
     }
-    console.log(functionChars);
   }, [functionChars.length, columnChars.length, editor, index, search, target]);
 
   const initialValue = [
@@ -170,9 +169,7 @@ function App() {
             {...props}
             formik={formik}
             setUsedColumns={setUsedColumns}
-            usedColumns={usedColumns}
-            ssetUsedGroupByColumns={setUsedGroupByColumns}
-            usedGroupByColumns={usedGroupByColumns}
+            setUsedGroupByColumns={setUsedGroupByColumns}
           />
         );
       default:

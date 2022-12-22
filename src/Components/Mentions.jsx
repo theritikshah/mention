@@ -20,7 +20,38 @@ const Mention = ({
     verticalAlign: "baseline",
     display: "inline-flex",
     borderRadius: "4px",
-    backgroundColor: "#eee",
+    backgroundColor: "#11a68378",
+    fontSize: "0.9em",
+    boxShadow: selected && focused ? "0 0 0 2px #B4D5FF" : "none",
+  };
+
+  const styleForAggFunc = {
+    padding: "3px 3px 2px",
+    margin: "0 1px",
+    verticalAlign: "baseline",
+    display: "inline-flex",
+    borderRadius: "4px",
+    backgroundColor: "#4a6ee07a",
+    fontSize: "0.9em",
+    boxShadow: selected && focused ? "0 0 0 2px #B4D5FF" : "none",
+  };
+  const styleForOperators = {
+    padding: "3px 3px 2px",
+    margin: "0 1px",
+    verticalAlign: "baseline",
+    display: "inline-flex",
+    borderRadius: "4px",
+    backgroundColor: "yellow",
+    fontSize: "0.9em",
+    boxShadow: selected && focused ? "0 0 0 2px #B4D5FF" : "none",
+  };
+  const styleForParenthesis = {
+    padding: "3px 3px 2px",
+    margin: "0 1px",
+    verticalAlign: "baseline",
+    display: "inline-flex",
+    borderRadius: "4px",
+    backgroundColor: "pink",
     fontSize: "0.9em",
     boxShadow: selected && focused ? "0 0 0 2px #B4D5FF" : "none",
   };
@@ -96,7 +127,7 @@ const Mention = ({
         {...attributes}
         contentEditable={false}
         data-cy={`mention-${element.character.name.replace(" ", "-")}`}
-        style={style}
+        style={styleForAggFunc}
       >
         {children}@{`${element.character.name} (Column: `}
         <select onChange={handleSelectChange} style={selectStyle}>
@@ -122,6 +153,25 @@ const Mention = ({
           ))}
         </select>
         &nbsp;)
+      </span>
+    );
+  } else if (
+    element.character.type === "operator" ||
+    element.character.type === "parenthesis"
+  ) {
+    return (
+      <span
+        {...attributes}
+        contentEditable={false}
+        data-cy={`mention-${element.character.val.replace(" ", "-")}`}
+        style={
+          element.character.type === "parenthesis"
+            ? styleForParenthesis
+            : styleForOperators
+        }
+      >
+        {children}
+        {element.character.val}
       </span>
     );
   }

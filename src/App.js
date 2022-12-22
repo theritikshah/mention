@@ -21,6 +21,7 @@ function App() {
   const [target, setTarget] = useState();
   const [index, setIndex] = useState(0);
   const [search, setSearch] = useState("");
+  const [columnSearch, setColumnSearch] = useState("");
   const [usedColumns, setUsedColumns] = useState([]);
   const [usedGroupByColumns, setUsedGroupByColumns] = useState([]);
   const renderElement = useCallback((props) => <Element {...props} />, []);
@@ -89,12 +90,16 @@ function App() {
   );
 
   const functionChars = functions
-    .filter((c) => c.name.toLowerCase().startsWith(search.toLowerCase()))
+    .filter(
+      (c) => search && c.name.toLowerCase().startsWith(search.toLowerCase())
+    )
     .slice(0, 10);
 
   const columnChars = columns
-    .filter((c) =>
-      c.Display.toLowerCase().startsWith(search.toLowerCase().slice(1))
+    .filter(
+      (c) =>
+        columnSearch &&
+        c.Display.toLowerCase().startsWith(columnSearch.toLowerCase())
     )
     .slice(0, 10);
 
@@ -148,6 +153,14 @@ function App() {
             setTarget(null);
             break;
         }
+      }
+      else if (["+","-","*","/"].includes(event.key)) {
+        event.preventDefault();
+        insertMention(editor, { type: "operator", val: event.key });
+      }
+      else if (["(",")"].includes(event.key)) {
+        event.preventDefault();
+        insertMention(editor, { type: "parenthesis", val: event.key });
       }
     },
     [index, search, target]
@@ -229,31 +242,44 @@ function App() {
         editor={editor}
         value={initialValue}
         onChange={(value) => {
+          setColumnSearch();	
+          setSearch();
           const { selection } = editor;
 
           if (selection && Range.isCollapsed(selection)) {
             const [start] = Range.edges(selection);
             const wordBefore = Editor.before(editor, start, { unit: "word" });
-            const before = wordBefore && Editor.before(editor, wordBefore);
-            const beforeRange = before && Editor.range(editor, before, start);
+
+            //match agg funct by checking if @ present
+            const beforeForAgg =
+              wordBefore && Editor.before(editor, wordBefore);
+            const beforeRangeForAgg =
+              beforeForAgg && Editor.range(editor, beforeForAgg, start);
+            const beforeTextForAgg =
+              beforeRangeForAgg && Editor.string(editor, beforeRangeForAgg);
+            const beforeMatch =
+              beforeTextForAgg && beforeTextForAgg.match(/^@(\w+)$/);
+
+            //match columns
+            const beforeRange =
+              wordBefore && Editor.range(editor, wordBefore, start);
             const beforeText =
               beforeRange && Editor.string(editor, beforeRange);
-            const beforeMatch = beforeText && beforeText.match(/^@(\w+)$/);
-            const beforeColumnMatch =
-              beforeText && beforeText.match(/^\s[a-zA-Z]+$/);
+            const beforeColumnMatch = beforeText && beforeText.match(/^(\w+)$/);
+
             const after = Editor.after(editor, start);
             const afterRange = Editor.range(editor, start, after);
             const afterText = Editor.string(editor, afterRange);
             const afterMatch = afterText.match(/^(\s|$)/);
 
             if (beforeMatch && afterMatch) {
-              setTarget(beforeRange);
+              setTarget(beforeRangeForAgg);
               setSearch(beforeMatch[1]);
               setIndex(0);
               return;
             } else if (beforeColumnMatch && afterMatch) {
               setTarget(beforeRange);
-              setSearch(beforeColumnMatch[0]);
+              setColumnSearch(beforeColumnMatch[1]);
               setIndex(0);
               return;
             }
@@ -269,6 +295,7 @@ function App() {
           let stringArray = [];
 
           const children = arr.flat(1).filter((obj) => obj.text !== "");
+          console.log("🚀 ~ file: App.js:272 ~ App ~ children", children)
 
           for (let obj of children) {
             if ("text" in obj) {
@@ -288,6 +315,7 @@ function App() {
             }
           }
 
+          console.log("🚀 ~ file: App.js:292 ~ App ~ stringArray", stringArray)
           console.log(stringArray.join(" ").replace(/ /g, ""));
         }}
       >

@@ -127,9 +127,12 @@ const Mention = ({
         {...attributes}
         contentEditable={false}
         data-cy={`mention-${element.character.name.replace(" ", "-")}`}
-        style={styleForAggFunc}
+        // style={styleForAggFunc}
+        className={"function-body"}
       >
-        {children}@{`${element.character.name} (Column: `}
+        {children}
+        <span className="function-name">@{element.character.name}</span>
+        {` (Column: `}
         <select onChange={handleSelectChange} style={selectStyle}>
           <option key="column" value="">
             select Column

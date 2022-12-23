@@ -6,6 +6,21 @@
 }
 
 
+.function-body{
+  background-color: #FFF1E1;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.178);
+}
+
+.function-name{
+  background-color: #FFAD31;
+  padding: 5px;
+  border-radius: 10px;
+  font: bold;
+}
+
+
 
 
 

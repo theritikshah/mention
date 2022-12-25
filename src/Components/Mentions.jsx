@@ -109,16 +109,16 @@ const Mention = ({
     style.fontStyle = "italic";
   }
 
-  if (element.character.Type === "column") {
+  if (element.character.type === "column") {
     return (
       <span
         {...attributes}
         contentEditable={false}
-        data-cy={`mention-${element.character.Display.replace(" ", "-")}`}
+        data-cy={`mention-${element.character.display.replace(" ", "-")}`}
         style={style}
       >
         {children}
-        {element.character.Display}
+        {element.character.display}
       </span>
     );
   } else if (element.character.type === "function") {
@@ -138,8 +138,8 @@ const Mention = ({
             select Column
           </option>
           {columns.map((column) => (
-            <option key={column.Val} value={column.Val}>
-              {column.Display}
+            <option key={column.val} value={column.val}>
+              {column.display}
             </option>
           ))}
         </select>{" "}
@@ -149,9 +149,9 @@ const Mention = ({
             select GroupBy Column
           </option>
           {columns.map((column) => (
-            <option key={column.Val} value={column.Val}>
+            <option key={column.val} value={column.val}>
               {" "}
-              {column.Display}
+              {column.display}
             </option>
           ))}
         </select>
@@ -160,7 +160,7 @@ const Mention = ({
     );
   } else if (
     element.character.type === "operator" ||
-    element.character.type === "parenthesis"
+    element.character.type === "parenthesis"|| element.character.type === "constant"
   ) {
     return (
       <span

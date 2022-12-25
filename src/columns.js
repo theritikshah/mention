@@ -1,23 +1,23 @@
 const columns = [
   {
-    Type: "column",
-    Val: "pass_id",
-    Display: "PASS ID",
+    type: "column",
+    val: "pass_id",
+    display: "PASS ID",
   },
   {
-    Type: "column",
-    Val: "pclass_id",
-    Display: "PCLASS ID",
+    type: "column",
+    val: "pclass_id",
+    display: "PCLASS ID",
   },
   {
-    Type: "column",
-    Val: "name",
-    Display: "NAME",
+    type: "column",
+    val: "name",
+    display: "NAME",
   },
   {
-    Type: "column",
-    Val: "age",
-    Display: "Age",
+    type: "column",
+    val: "age",
+    display: "Age",
   },
 ];
 

@@ -15,6 +15,7 @@ import columns from "./columns";
 import functions from "./functions";
 import { v4 as uuidv4 } from "uuid";
 import { useFormik } from "formik";
+import * as Yup from "yup";
 
 function App() {
   const ref = useRef();
@@ -59,11 +60,101 @@ function App() {
       return `${column}.${value}()`;
     }
   }
+  const getAttributes = (key) => {
+    let column, groupColumn;
 
+    for (let obj of usedGroupByColumns) {
+      if (obj.key === key) {
+        groupColumn = obj.name;
+      }
+    }
+
+    for (let obj of usedColumns) {
+      if (obj.key == key) {
+        column = obj.name;
+      }
+    }
+    return [column, groupColumn]
+  }
   const formik = useFormik({
     initialValues: {
       functionColumns: [],
     },
+    validationSchema: Yup.object().shape({
+      functionColumns: Yup.array().min(1, "Formula is required").test("functionColumns", "Enter a Valid expression", (value, index) => {
+        if (value.length === 1) {
+          return false;
+        }
+        //formula starts with operator
+        if (value[0]?.type === "operator") return false;
+
+        // formula ends with operator or open parenthesis
+        if ("+-*/(".includes(value[value.length - 1]?.val)) return false;
+
+
+        // Check for the left and right of operator and two consecutive parenthese
+        for (let val = 0; val < value.length - 1; val++) {
+          if (value[val]?.val === "(" && value[val + 1]?.val === ")") return false;
+
+          if ("+-*/".includes(value[val]?.val)) {
+            if (
+              "*/(".includes(value[val - 1]?.val) ||
+              "+-*/)".includes(value[val + 1]?.val)
+            ) {
+              return false;
+            }
+          }
+        }
+        return true;
+      })
+        // Testing for 2 consecutive operators/constant
+        .test(
+          "functionColumns",
+          "No two constants can be present together",
+          (value, index) => {
+            // Condition for no 2 operators can be together
+            for (let val = 0; val < value.length; val++) {
+              console.log(value, val)
+              if (value[val]?.type === "constant" && value[val]?.val?.trim().includes(" ")) return false;
+            }
+            return true;
+          }
+        )
+        // Testing for 2 consecutive operators/constant
+        .test(
+          "functionColumns",
+          "Constant should be number",
+          (value, index) => {
+            // Condition for no 2 operators can be together
+            for (let val = 0; val < value.length; val++) {
+              console.log(value, val)
+              if (value[val]?.type === "constant" && !(/^[0-9]*$/.test(value[val]?.val))) return false;
+            }
+            return true;
+          }
+        )
+        // Testing for parenthesis check
+        .test("functionColumns", "Enter a valid parenthesis", (value, index) => {
+          let arr = value;
+
+          let stack = [];
+          for (let val = 0; val < arr.length; val++) {
+            if (arr[val]?.type == "parenthesis") {
+              if (arr[val]?.val == "(") {
+                stack.push(arr[val].val);
+              } else if (stack[stack.length - 1] == "(" && arr[val]?.val == ")") {
+                stack.pop();
+              } else {
+                return false;
+              }
+            }
+          }
+          if (stack.length == 0) {
+            return true;
+          }
+          return false;
+        })
+    })
   });
 
   const withMentions = (editor) => {
@@ -99,7 +190,7 @@ function App() {
     .filter(
       (c) =>
         columnSearch &&
-        c.Display.toLowerCase().startsWith(columnSearch.toLowerCase())
+        c.display.toLowerCase().startsWith(columnSearch.toLowerCase())
     )
     .slice(0, 10);
 
@@ -154,13 +245,17 @@ function App() {
             break;
         }
       }
-      else if (["+","-","*","/"].includes(event.key)) {
+      else if (["+", "-", "*", "/"].includes(event.key)) {
         event.preventDefault();
         insertMention(editor, { type: "operator", val: event.key });
       }
-      else if (["(",")"].includes(event.key)) {
+      else if (["(", ")"].includes(event.key)) {
         event.preventDefault();
         insertMention(editor, { type: "parenthesis", val: event.key });
+      }
+      else if(/^(\d+)\s$/.test(event.key)){
+        event.preventDefault();
+        insertMention(editor, { type: "constant", val: event.key });
       }
     },
     [index, search, target]
@@ -181,7 +276,7 @@ function App() {
       type: "paragraph",
       children: [
         {
-          text: "This example shows how calculation UI will work ",
+          text: "",
         },
       ],
     },
@@ -238,34 +333,42 @@ function App() {
 
   return (
     <div className="App">
+      {JSON.stringify(formik.errors)}
+      <br />
       <Slate
         editor={editor}
         value={initialValue}
         onChange={(value) => {
-          setColumnSearch();	
+          setColumnSearch();
           setSearch();
           const { selection } = editor;
 
           if (selection && Range.isCollapsed(selection)) {
             const [start] = Range.edges(selection);
             const wordBefore = Editor.before(editor, start, { unit: "word" });
+            console.log("🚀 ~ file: App.js:349 ~ App ~ wordBefore", wordBefore)
 
             //match agg funct by checking if @ present
             const beforeForAgg =
-              wordBefore && Editor.before(editor, wordBefore);
+            wordBefore && Editor.before(editor, wordBefore);
+            console.log("🚀 ~ file: App.js:353 ~ App ~ beforeForAgg", beforeForAgg)
             const beforeRangeForAgg =
-              beforeForAgg && Editor.range(editor, beforeForAgg, start);
+            beforeForAgg && Editor.range(editor, beforeForAgg, start);
+            console.log("🚀 ~ file: App.js:356 ~ App ~ beforeRangeForAgg", beforeRangeForAgg)
             const beforeTextForAgg =
-              beforeRangeForAgg && Editor.string(editor, beforeRangeForAgg);
+            beforeRangeForAgg && Editor.string(editor, beforeRangeForAgg);
+            console.log("🚀 ~ file: App.js:359 ~ App ~ beforeTextForAgg", beforeTextForAgg)
             const beforeMatch =
               beforeTextForAgg && beforeTextForAgg.match(/^@(\w+)$/);
 
             //match columns
             const beforeRange =
-              wordBefore && Editor.range(editor, wordBefore, start);
+            wordBefore && Editor.range(editor, wordBefore, start);
+            console.log("🚀 ~ file: App.js:365 ~ App ~ beforeRange", beforeRange)
             const beforeText =
-              beforeRange && Editor.string(editor, beforeRange);
-            const beforeColumnMatch = beforeText && beforeText.match(/^(\w+)$/);
+            beforeRange && Editor.string(editor, beforeRange);
+            console.log("🚀 ~ file: App.js:369 ~ App ~ beforeText", beforeText)
+            const beforeColumnMatch = beforeText && beforeText.match(/^([a-zA-Z_])$/);
 
             const after = Editor.after(editor, start);
             const afterRange = Editor.range(editor, start, after);
@@ -286,44 +389,69 @@ function App() {
           }
 
           setTarget(null);
-          console.log(value);
           let arr = [];
+          console.log(value);
           value.forEach((obj) => {
+            console.log(obj)
             arr.push(obj.children);
           });
 
+          console.log("🚀 ~ file: App.js:372 ~ App ~ arr", arr)
           let stringArray = [];
+          // console.log("🚀 ~ file: App.js:372 ~ App ~ arr", arr)
 
           const children = arr.flat(1).filter((obj) => obj.text !== "");
           console.log("🚀 ~ file: App.js:272 ~ App ~ children", children)
-
+          let objArray = []
           for (let obj of children) {
+
             if ("text" in obj) {
+              const constantObject = {}
+              constantObject["type"] = "constant"
+              constantObject["val"] = obj.text
+              objArray.push(constantObject)
               stringArray.push(obj.text);
             } else if (
               obj.type == "mention" &&
               obj.character.type == "function"
             ) {
+              const [column, groupByCol] = getAttributes(obj.character.key)
+              const aggParams = {
+                Col: column,
+                // display: “Sales”,
+                groupedBy: groupByCol,
+                // groupedByDisplay: Brick
+              }
+              let tempObj = { ...obj.character }
+              tempObj["AggParams"] = aggParams
+              objArray.push(tempObj)
               stringArray.push(
                 functionToString(obj.character.value, obj.character.key)
               );
             } else if (
               obj.type == "mention" &&
-              obj.character.Type == "column"
+              obj.character.type == "column"
             ) {
-              stringArray.push(obj.character.Val);
+              objArray.push(obj.character)
+              stringArray.push(obj.character?.val);
+            }
+            else if (
+              obj.type == "mention" &&
+              obj.character.type == "operator" || obj.character.type == "parenthesis"
+            ) {
+              objArray.push(obj.character)
             }
           }
-
-          console.log("🚀 ~ file: App.js:292 ~ App ~ stringArray", stringArray)
-          console.log(stringArray.join(" ").replace(/ /g, ""));
+          formik.setFieldValue("functionColumns", objArray)
+          // console.log("🚀 ~ file: App.js:292 ~ App ~ stringArray", objArray)
+          // console.log(stringArray.join(" ").replace(/ /g, ""));
         }}
       >
         <Editable
           renderElement={renderElement}
           renderLeaf={renderLeaf}
           onKeyDown={onKeyDown}
-          placeholder="Enter some text..."
+          placeholder="Enter formula..."
         />
         {target && (columnChars.length > 0 || functionChars.length > 0) && (
           <Portal>
@@ -343,19 +471,19 @@ function App() {
             >
               {functionChars.length > 0
                 ? functionChars.map((char, i) => (
-                    <div
-                      key={char}
-                      style={{
-                        padding: "1px 3px",
-                        borderRadius: "3px",
-                        background: i === index ? "#B4D5FF" : "transparent",
-                      }}
-                    >
-                      {char.name}
-                    </div>
-                  ))
+                  <div
+                    key={char}
+                    style={{
+                      padding: "1px 3px",
+                      borderRadius: "3px",
+                      background: i === index ? "#B4D5FF" : "transparent",
+                    }}
+                  >
+                    {char.name}
+                  </div>
+                ))
                 : columnChars.length > 0
-                ? columnChars.map((char, i) => (
+                  ? columnChars.map((char, i) => (
                     <div
                       key={char}
                       style={{
@@ -364,10 +492,10 @@ function App() {
                         background: i === index ? "#B4D5FF" : "transparent",
                       }}
                     >
-                      {char.Display}
+                      {char.display}
                     </div>
                   ))
-                : null}
+                  : null}
             </div>
           </Portal>
         )}

@@ -28,15 +28,6 @@ function App() {
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
 
-  useEffect(() => {
-    console.log(
-      "Used Columns: ",
-      usedColumns,
-      "Used Group By columns: ",
-      usedGroupByColumns
-    );
-  }, [usedColumns, usedGroupByColumns]);
-
   function functionToString(value, key) {
     let column, groupColumn;
 
@@ -114,7 +105,6 @@ function App() {
           (value, index) => {
             // Condition for no 2 operators can be together
             for (let val = 0; val < value.length; val++) {
-              console.log(value, val)
               if (value[val]?.type === "constant" && value[val]?.val?.trim().includes(" ")) return false;
             }
             return true;
@@ -127,7 +117,6 @@ function App() {
           (value, index) => {
             // Condition for no 2 operators can be together
             for (let val = 0; val < value.length; val++) {
-              console.log(value, val)
               if (value[val]?.type === "constant" && !(/^[0-9]*$/.test(value[val]?.val))) return false;
             }
             return true;
@@ -186,13 +175,24 @@ function App() {
     )
     .slice(0, 10);
 
+  // const columnChars = ()=>{ const cols = columns
+  //   .filter(
+  //     (c) =>
+  //       columnSearch &&
+  //       c.display.toLowerCase().startsWith(columnSearch.toLowerCase())
+  //   )
+  //   if (cols.length) return cols.slice(0, 10);
+  //   return columns.slice(0, 10);
+  // }
   const columnChars = columns
     .filter(
       (c) =>
         columnSearch &&
         c.display.toLowerCase().startsWith(columnSearch.toLowerCase())
     )
-    .slice(0, 10);
+   .slice(0, 10);
+   
+    
 
   const onKeyDown = useCallback(
     (event) => {
@@ -243,6 +243,9 @@ function App() {
             event.preventDefault();
             setTarget(null);
             break;
+          default:
+            // event.preventDefault();
+            break;
         }
       }
       else if (["+", "-", "*", "/"].includes(event.key)) {
@@ -253,7 +256,7 @@ function App() {
         event.preventDefault();
         insertMention(editor, { type: "parenthesis", val: event.key });
       }
-      else if(/^(\d+)\s$/.test(event.key)){
+      else if (/^(\d+)\s$/.test(event.key)) {
         event.preventDefault();
         insertMention(editor, { type: "constant", val: event.key });
       }
@@ -288,7 +291,10 @@ function App() {
       character,
       children: [{ text: "" }],
     };
+
     Transforms.insertNodes(editor, mention);
+    Transforms.select(editor, Editor.end(editor, []));
+    // Transforms.move(editor, {distance: 1, unit: 'line'});
     Transforms.move(editor);
   };
 
@@ -339,36 +345,34 @@ function App() {
         editor={editor}
         value={initialValue}
         onChange={(value) => {
+          console.log("🚀 ~ file: App.js:493 ~ App ~ value", value)
+
           setColumnSearch();
           setSearch();
           const { selection } = editor;
 
           if (selection && Range.isCollapsed(selection)) {
             const [start] = Range.edges(selection);
-            const wordBefore = Editor.before(editor, start, { unit: "word" });
+            console.log("🚀 ~ file: App.js:348 ~ App ~ start", start)
+            const wordBefore = Editor.before(editor, start, {unit: "word" });
             console.log("🚀 ~ file: App.js:349 ~ App ~ wordBefore", wordBefore)
+            // //match columns
+            const beforeRange =
+              wordBefore && Editor.range(editor, wordBefore, start);
+            const beforeText =
+              beforeRange && Editor.string(editor, beforeRange);
+            const beforeColumnMatch = beforeText && beforeText.match(/^([a-zA-Z_]+)$/);
 
             //match agg funct by checking if @ present
             const beforeForAgg =
             wordBefore && Editor.before(editor, wordBefore);
-            console.log("🚀 ~ file: App.js:353 ~ App ~ beforeForAgg", beforeForAgg)
             const beforeRangeForAgg =
-            beforeForAgg && Editor.range(editor, beforeForAgg, start);
-            console.log("🚀 ~ file: App.js:356 ~ App ~ beforeRangeForAgg", beforeRangeForAgg)
+              beforeForAgg && Editor.range(editor, beforeForAgg, start);
             const beforeTextForAgg =
-            beforeRangeForAgg && Editor.string(editor, beforeRangeForAgg);
-            console.log("🚀 ~ file: App.js:359 ~ App ~ beforeTextForAgg", beforeTextForAgg)
+              beforeRangeForAgg && Editor.string(editor, beforeRangeForAgg);
             const beforeMatch =
               beforeTextForAgg && beforeTextForAgg.match(/^@(\w+)$/);
 
-            //match columns
-            const beforeRange =
-            wordBefore && Editor.range(editor, wordBefore, start);
-            console.log("🚀 ~ file: App.js:365 ~ App ~ beforeRange", beforeRange)
-            const beforeText =
-            beforeRange && Editor.string(editor, beforeRange);
-            console.log("🚀 ~ file: App.js:369 ~ App ~ beforeText", beforeText)
-            const beforeColumnMatch = beforeText && beforeText.match(/^([a-zA-Z_])$/);
 
             const after = Editor.after(editor, start);
             const afterRange = Editor.range(editor, start, after);
@@ -390,18 +394,14 @@ function App() {
 
           setTarget(null);
           let arr = [];
-          console.log(value);
           value.forEach((obj) => {
-            console.log(obj)
             arr.push(obj.children);
           });
 
-          console.log("🚀 ~ file: App.js:372 ~ App ~ arr", arr)
           let stringArray = [];
-          // console.log("🚀 ~ file: App.js:372 ~ App ~ arr", arr)
 
           const children = arr.flat(1).filter((obj) => obj.text !== "");
-          console.log("🚀 ~ file: App.js:272 ~ App ~ children", children)
+
           let objArray = []
           for (let obj of children) {
 
@@ -472,7 +472,7 @@ function App() {
               {functionChars.length > 0
                 ? functionChars.map((char, i) => (
                   <div
-                    key={char}
+                    key={i}
                     style={{
                       padding: "1px 3px",
                       borderRadius: "3px",
@@ -485,7 +485,7 @@ function App() {
                 : columnChars.length > 0
                   ? columnChars.map((char, i) => (
                     <div
-                      key={char}
+                      key={i}
                       style={{
                         padding: "1px 3px",
                         borderRadius: "3px",

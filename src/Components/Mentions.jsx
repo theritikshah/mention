@@ -160,7 +160,7 @@ const Mention = ({
     );
   } else if (
     element.character.type === "operator" ||
-    element.character.type === "parenthesis"|| element.character.type === "constant"
+    element.character.type === "parenthesis"
   ) {
     return (
       <span

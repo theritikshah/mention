@@ -175,15 +175,6 @@ function App() {
     )
     .slice(0, 10);
 
-  // const columnChars = ()=>{ const cols = columns
-  //   .filter(
-  //     (c) =>
-  //       columnSearch &&
-  //       c.display.toLowerCase().startsWith(columnSearch.toLowerCase())
-  //   )
-  //   if (cols.length) return cols.slice(0, 10);
-  //   return columns.slice(0, 10);
-  // }
   const columnChars = columns
     .filter(
       (c) =>
@@ -243,9 +234,6 @@ function App() {
             event.preventDefault();
             setTarget(null);
             break;
-          default:
-            // event.preventDefault();
-            break;
         }
       }
       else if (["+", "-", "*", "/"].includes(event.key)) {
@@ -293,8 +281,6 @@ function App() {
     };
 
     Transforms.insertNodes(editor, mention);
-    Transforms.select(editor, Editor.end(editor, []));
-    // Transforms.move(editor, {distance: 1, unit: 'line'});
     Transforms.move(editor);
   };
 
@@ -345,8 +331,6 @@ function App() {
         editor={editor}
         value={initialValue}
         onChange={(value) => {
-          console.log("🚀 ~ file: App.js:493 ~ App ~ value", value)
-
           setColumnSearch();
           setSearch();
           const { selection } = editor;
@@ -358,7 +342,8 @@ function App() {
             console.log("🚀 ~ file: App.js:349 ~ App ~ wordBefore", wordBefore)
             // //match columns
             const beforeRange =
-              wordBefore && Editor.range(editor, wordBefore, start);
+            wordBefore && Editor.range(editor, wordBefore, start);
+            console.log("🚀 ~ file: App.js:361 ~ App ~ beforeRange", beforeRange)
             const beforeText =
               beforeRange && Editor.string(editor, beforeRange);
             const beforeColumnMatch = beforeText && beforeText.match(/^([a-zA-Z_]+)$/);
@@ -378,7 +363,14 @@ function App() {
             const afterRange = Editor.range(editor, start, after);
             const afterText = Editor.string(editor, afterRange);
             const afterMatch = afterText.match(/^(\s|$)/);
+            
+            if(beforeRangeForAgg?.anchor.path.length > 2) {
+              beforeRangeForAgg.anchor.path = beforeRangeForAgg?.focus.path;
+            }
 
+            if(beforeRange?.anchor.path.length > 2) {
+              beforeRange.anchor.path = beforeRange?.focus.path;
+            }
             if (beforeMatch && afterMatch) {
               setTarget(beforeRangeForAgg);
               setSearch(beforeMatch[1]);
